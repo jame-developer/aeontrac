@@ -12,7 +12,7 @@ git clone https://github.com/yourusername/aeontrac.git
 cd aeontrac
 
 # Build the application
-go build
+go build -o aeontrac cmd/cli/main.go
 
 # Run the application
 ./aeontrac
