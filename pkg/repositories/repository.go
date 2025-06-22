@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"github.com/jame-developer/aeontrac/aeontrac"
+	"github.com/jame-developer/aeontrac/configuration"
 	holidays2 "github.com/jame-developer/aeontrac/pkg/holidays"
 	"github.com/jame-developer/aeontrac/pkg/models"
 	"io"
@@ -87,7 +87,7 @@ func SaveAeonVault(folder string, data models.AeonVault) error {
 }
 
 // NewAeonVault creates a new AeonVault instance with the provided year and public holidays configuration
-func NewAeonVault(year int, publicHolidaysConfig aeontrac.PublicHolidaysConfig) (models.AeonVault, error) {
+func NewAeonVault(year int, publicHolidaysConfig configuration.PublicHolidaysConfig) (models.AeonVault, error) {
 	holidays, err := holidays2.LoadHolidays(publicHolidaysConfig, year)
 	if err != nil {
 		return models.AeonVault{}, err

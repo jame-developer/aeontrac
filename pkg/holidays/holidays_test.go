@@ -2,7 +2,7 @@ package holidays
 
 import (
 	"errors"
-	"github.com/jame-developer/aeontrac/aeontrac"
+	"github.com/jame-developer/aeontrac/configuration"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -107,7 +107,7 @@ func TestLoadHolidays(t *testing.T) {
 			if tt.breakUrl {
 				testUrl = "http://localhost:1234"
 			}
-			config := aeontrac.PublicHolidaysConfig{
+			config := configuration.PublicHolidaysConfig{
 				Country: "US",
 				APIURL:  testUrl,
 			}

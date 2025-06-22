@@ -2,7 +2,7 @@ package commands
 
 import (
 	"fmt"
-	"github.com/jame-developer/aeontrac/aeontrac"
+	"github.com/jame-developer/aeontrac/configuration"
 	"github.com/jame-developer/aeontrac/pkg/models"
 	"github.com/jame-developer/aeontrac/pkg/tracking"
 	"os"
@@ -10,7 +10,7 @@ import (
 )
 
 // StopCommand stops time tracking
-func StopCommand(args []string, workingHoursConfig aeontrac.WorkingHoursConfig, a *models.AeonVault) {
+func StopCommand(args []string, workingHoursConfig configuration.WorkingHoursConfig, a *models.AeonVault) {
 	stopTime, err := parseTimeParam(args, 0)
 	if err != nil {
 		fmt.Println("Error parsing start time:", err)
@@ -38,7 +38,7 @@ func StartCommand(args []string, a *models.AeonVault) {
 	}
 }
 
-func AddTimeWorkUnitCommand(args []string, workingHoursConfig aeontrac.WorkingHoursConfig, a *models.AeonVault) {
+func AddTimeWorkUnitCommand(args []string, workingHoursConfig configuration.WorkingHoursConfig, a *models.AeonVault) {
 	startTime, err := parseTimeParam(args, 0)
 	if err != nil {
 		fmt.Println("Error parsing start time:", err)

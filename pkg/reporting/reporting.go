@@ -2,7 +2,7 @@ package reporting
 
 import (
 	"fmt"
-	"github.com/jame-developer/aeontrac/aeontrac"
+	"github.com/jame-developer/aeontrac/configuration"
 	"github.com/jame-developer/aeontrac/pkg/models"
 	"log"
 	"sort"
@@ -12,7 +12,7 @@ import (
 
 const unitLineTmpl = "%s %s\t%s\t%s"
 
-func PrintTodayReport(workingHoursConfig aeontrac.WorkingHoursConfig, a *models.AeonVault) {
+func PrintTodayReport(workingHoursConfig configuration.WorkingHoursConfig, a *models.AeonVault) {
 	today := a.Days[time.Now().Format(time.DateOnly)]
 	var reportLines []string
 	unitLines := map[int]string{}
@@ -59,7 +59,7 @@ func PrintTodayReport(workingHoursConfig aeontrac.WorkingHoursConfig, a *models.
 	}
 }
 
-func PrintQuarterlyReport(workingHoursConfig aeontrac.WorkingHoursConfig, a *models.AeonVault) {
+func PrintQuarterlyReport(workingHoursConfig configuration.WorkingHoursConfig, a *models.AeonVault) {
 	now := time.Now()
 	startOfCurrentMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 	startOfTwoMonthsBefore := startOfCurrentMonth.AddDate(0, -2, 0)

@@ -3,7 +3,7 @@ package repositories
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"github.com/jame-developer/aeontrac/aeontrac"
+	"github.com/jame-developer/aeontrac/configuration"
 	"github.com/jame-developer/aeontrac/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -29,15 +29,15 @@ func TestNewAeonVault(t *testing.T) {
 	tests := []struct {
 		name                 string
 		year                 int
-		publicHolidaysConfig aeontrac.PublicHolidaysConfig
-		workingHoursConfig   aeontrac.WorkingHoursConfig
+		publicHolidaysConfig configuration.PublicHolidaysConfig
+		workingHoursConfig   configuration.WorkingHoursConfig
 		expectedError        error
 		expectedHolidays     []time.Time
 	}{
 		{
 			name: "ValidInputWithHolidays",
 			year: 2024,
-			publicHolidaysConfig: aeontrac.PublicHolidaysConfig{
+			publicHolidaysConfig: configuration.PublicHolidaysConfig{
 				Enabled: true,
 				Country: "DE",
 				Region:  "",

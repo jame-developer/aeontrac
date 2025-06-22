@@ -2,7 +2,7 @@ package tracking
 
 import (
 	"github.com/google/uuid"
-	"github.com/jame-developer/aeontrac/aeontrac"
+	"github.com/jame-developer/aeontrac/configuration"
 	"github.com/jame-developer/aeontrac/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -116,7 +116,7 @@ func TestStopTracking(t *testing.T) {
 	testDayKey := now.Format(time.DateOnly)
 	nowMinusOneHour := now.Add(-1 * time.Hour)
 	nowPlusOneHour := now.Add(1 * time.Hour)
-	testWorkingHoursConfig := aeontrac.WorkingHoursConfig{
+	testWorkingHoursConfig := configuration.WorkingHoursConfig{
 		Enabled:  true,
 		WorkDay:  &models.AeonDuration{Duration: 8 * time.Hour},
 		WorkWeek: &models.AeonDuration{Duration: 40 * time.Hour},
@@ -124,7 +124,7 @@ func TestStopTracking(t *testing.T) {
 	tests := []struct {
 		name               string
 		stopDateTime       *time.Time
-		workingHoursConfig aeontrac.WorkingHoursConfig
+		workingHoursConfig configuration.WorkingHoursConfig
 		setupFunc          func(a *models.AeonVault) // Function to setup the environment for the test
 		expectedError      bool
 		expectedTotal      time.Duration
@@ -242,7 +242,7 @@ func TestAddTimeWorkUnit(t *testing.T) {
 	testDayKey := testStartTime.Format(time.DateOnly)
 	testWeekendStartTime, _ := time.Parse(time.RFC3339, "2020-02-08T13:00:00Z")
 	testWeekendStopTime, _ := time.Parse(time.RFC3339, "2020-02-08T17:00:00Z")
-	testWorkingHoursConfig := aeontrac.WorkingHoursConfig{
+	testWorkingHoursConfig := configuration.WorkingHoursConfig{
 		Enabled:  true,
 		WorkDay:  &models.AeonDuration{Duration: 8 * time.Hour},
 		WorkWeek: &models.AeonDuration{Duration: 40 * time.Hour},
@@ -251,7 +251,7 @@ func TestAddTimeWorkUnit(t *testing.T) {
 		name               string
 		startDateTime      *time.Time
 		stopDateTime       *time.Time
-		workingHoursConfig aeontrac.WorkingHoursConfig
+		workingHoursConfig configuration.WorkingHoursConfig
 		comment            string
 		setupFunc          func(a *models.AeonVault) // Function to setup the environment for the test
 		expectedError      bool
@@ -393,7 +393,7 @@ func TestAddTimeCompensatoryUnit(t *testing.T) {
 	testDayKey := testStartTime.Format(time.DateOnly)
 	testWeekendStartTime, _ := time.Parse(time.RFC3339, "2020-02-08T13:00:00Z")
 	testWeekendStopTime, _ := time.Parse(time.RFC3339, "2020-02-08T17:00:00Z")
-	testWorkingHoursConfig := aeontrac.WorkingHoursConfig{
+	testWorkingHoursConfig := configuration.WorkingHoursConfig{
 		Enabled:  true,
 		WorkDay:  &models.AeonDuration{Duration: 8 * time.Hour},
 		WorkWeek: &models.AeonDuration{Duration: 40 * time.Hour},
@@ -402,7 +402,7 @@ func TestAddTimeCompensatoryUnit(t *testing.T) {
 		name               string
 		startDateTime      *time.Time
 		stopDateTime       *time.Time
-		workingHoursConfig aeontrac.WorkingHoursConfig
+		workingHoursConfig configuration.WorkingHoursConfig
 		comment            string
 		setupFunc          func(a *models.AeonVault) // Function to setup the environment for the test
 		expectedError      bool

@@ -1,4 +1,4 @@
-package aeontrac
+package configuration
 
 import (
 	"github.com/jame-developer/aeontrac/pkg/models"

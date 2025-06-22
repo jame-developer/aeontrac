@@ -2,7 +2,7 @@ package tracking
 
 import (
 	"github.com/google/uuid"
-	"github.com/jame-developer/aeontrac/aeontrac"
+	"github.com/jame-developer/aeontrac/configuration"
 	"github.com/jame-developer/aeontrac/pkg/errors"
 	"github.com/jame-developer/aeontrac/pkg/models"
 	"github.com/jame-developer/aeontrac/pkg/repositories"
@@ -54,7 +54,7 @@ func StartTracking(startDateTime *time.Time, comment string, a *models.AeonVault
 // If no unit of work is running, an error is returned.
 // If the provided time is before the start time of the unit of work, an error is returned.
 // If the provided time is not provided, the current time is used.
-func StopTracking(stopDateTime *time.Time, workingHoursConfig aeontrac.WorkingHoursConfig, a *models.AeonVault) error {
+func StopTracking(stopDateTime *time.Time, workingHoursConfig configuration.WorkingHoursConfig, a *models.AeonVault) error {
 	if a.CurrentRunningUnit == nil {
 		return errors.ErrNoUnitOfWorkRunning
 	}
@@ -90,7 +90,7 @@ func StopTracking(stopDateTime *time.Time, workingHoursConfig aeontrac.WorkingHo
 // If the provided stop time is before the start time, an error is returned.
 // If the provided start time is within a previously completed unit of work, an error is returned.
 // If the provided stop time is within a previously completed unit of work, an error is returned.
-func AddTimeWorkUnit(startDateTime, stopDateTime *time.Time, comment string, workingHoursConfig aeontrac.WorkingHoursConfig, a *models.AeonVault) error {
+func AddTimeWorkUnit(startDateTime, stopDateTime *time.Time, comment string, workingHoursConfig configuration.WorkingHoursConfig, a *models.AeonVault) error {
 	if startDateTime.After(*stopDateTime) {
 		return errors.ErrStopTimeBeforeStartTime
 	}
@@ -130,7 +130,7 @@ func AddTimeWorkUnit(startDateTime, stopDateTime *time.Time, comment string, wor
 // If the provided stop time is before the start time, an error is returned.
 // If the provided start time is within a previously completed unit of work, an error is returned.
 // If the provided stop time is within a previously completed unit of work, an error is returned.
-func addTimeCompensatoryUnit(startDateTime, stopDateTime *time.Time, comment string, workingHoursConfig aeontrac.WorkingHoursConfig, a *models.AeonVault) error {
+func addTimeCompensatoryUnit(startDateTime, stopDateTime *time.Time, comment string, workingHoursConfig configuration.WorkingHoursConfig, a *models.AeonVault) error {
 	if startDateTime.After(*stopDateTime) {
 		return errors.ErrStopTimeBeforeStartTime
 	}
@@ -171,7 +171,7 @@ func addTimeCompensatoryUnit(startDateTime, stopDateTime *time.Time, comment str
 }
 
 // calculateDayWorkDurations calculates the total and overtime hours for a day.
-func calculateDayWorkDurations(currentDay *models.AeonDay, newUnit *models.AeonUnit, workingHoursConfig aeontrac.WorkingHoursConfig) (time.Duration, time.Duration) {
+func calculateDayWorkDurations(currentDay *models.AeonDay, newUnit *models.AeonUnit, workingHoursConfig configuration.WorkingHoursConfig) (time.Duration, time.Duration) {
 	totalHours := currentDay.TotalHours.Duration
 	overtimeHours := currentDay.OvertimeHours.Duration
 	totalHours += newUnit.Duration.Duration
@@ -187,7 +187,7 @@ func calculateDayWorkDurations(currentDay *models.AeonDay, newUnit *models.AeonU
 }
 
 // calculateDayCompensatoryDurations calculates the total and overtime hours for a day with compensatory time.
-func calculateDayCompensatoryDurations(currentDay *models.AeonDay, newUnit *models.AeonUnit, workingHoursConfig aeontrac.WorkingHoursConfig) (time.Duration, time.Duration) {
+func calculateDayCompensatoryDurations(currentDay *models.AeonDay, newUnit *models.AeonUnit, workingHoursConfig configuration.WorkingHoursConfig) (time.Duration, time.Duration) {
 	totalHours := currentDay.TotalHours.Duration
 	overtimeHours := currentDay.OvertimeHours.Duration
 	totalHours -= newUnit.Duration.Duration
