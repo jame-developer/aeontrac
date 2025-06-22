@@ -1,6 +1,9 @@
 package aeontrac
 
-import "time"
+import (
+	"github.com/jame-developer/aeontrac/pkg/models"
+	"time"
+)
 
 type (
 	// PublicHolidaysConfig represents the configuration for public holidays
@@ -18,11 +21,11 @@ type (
 		// End of the work day
 		EndTime time.Time `json:"end_time"`
 		// Duration of the lunch break
-		LunchBreak *AeonDuration `json:"lunch_break"`
+		LunchBreak *models.AeonDuration `json:"lunch_break"`
 		// Duration of the work day
-		WorkDay *AeonDuration `json:"work_day"`
+		WorkDay *models.AeonDuration `json:"work_day"`
 		// Duration of the work week
-		WorkWeek *AeonDuration `json:"work_week"`
+		WorkWeek *models.AeonDuration `json:"work_week"`
 	}
 )
 
@@ -31,8 +34,8 @@ func GetDefaultWorkingHoursConfig() WorkingHoursConfig {
 		Enabled:    true,
 		StartTime:  time.Date(2024, 1, 1, 9, 0, 0, 0, time.UTC),
 		EndTime:    time.Date(2024, 1, 1, 17, 0, 0, 0, time.UTC),
-		LunchBreak: &AeonDuration{time.Hour},
-		WorkDay:    &AeonDuration{time.Hour * 8},
-		WorkWeek:   &AeonDuration{time.Hour * 40},
+		LunchBreak: &models.AeonDuration{Duration: time.Hour},
+		WorkDay:    &models.AeonDuration{Duration: time.Hour * 8},
+		WorkWeek:   &models.AeonDuration{Duration: time.Hour * 40},
 	}
 }

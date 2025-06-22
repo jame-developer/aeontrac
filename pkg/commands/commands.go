@@ -1,19 +1,22 @@
-package aeontrac
+package commands
 
 import (
 	"fmt"
+	"github.com/jame-developer/aeontrac/aeontrac"
+	"github.com/jame-developer/aeontrac/pkg/models"
+	"github.com/jame-developer/aeontrac/pkg/tracking"
 	"os"
 	"time"
 )
 
 // StopCommand stops time tracking
-func (a *AeonVault) StopCommand(args []string, workingHoursConfig WorkingHoursConfig) {
+func StopCommand(args []string, workingHoursConfig aeontrac.WorkingHoursConfig, a *models.AeonVault) {
 	stopTime, err := parseTimeParam(args, 0)
 	if err != nil {
 		fmt.Println("Error parsing start time:", err)
 		os.Exit(1)
 	}
-	err = a.stopTracking(&stopTime, workingHoursConfig)
+	err = tracking.StopTracking(&stopTime, workingHoursConfig, a)
 	if err != nil {
 		fmt.Printf("Error stopping time tracking: %v\n", err)
 		os.Exit(1)
@@ -22,20 +25,20 @@ func (a *AeonVault) StopCommand(args []string, workingHoursConfig WorkingHoursCo
 }
 
 // StartCommand starts time tracking
-func (a *AeonVault) StartCommand(args []string) {
+func StartCommand(args []string, a *models.AeonVault) {
 	startTime, err := parseTimeParam(args, 0)
 	if err != nil {
 		fmt.Println("Error parsing start time:", err)
 		os.Exit(1)
 	}
-	err = a.startTracking(&startTime, "")
+	err = tracking.StartTracking(&startTime, "", a)
 	if err != nil {
 		fmt.Println("Error starting time tracking:", err)
 		os.Exit(1)
 	}
 }
 
-func (a *AeonVault) AddTimeWorkUnitCommand(args []string, workingHoursConfig WorkingHoursConfig) {
+func AddTimeWorkUnitCommand(args []string, workingHoursConfig aeontrac.WorkingHoursConfig, a *models.AeonVault) {
 	startTime, err := parseTimeParam(args, 0)
 	if err != nil {
 		fmt.Println("Error parsing start time:", err)
@@ -46,7 +49,7 @@ func (a *AeonVault) AddTimeWorkUnitCommand(args []string, workingHoursConfig Wor
 		fmt.Println("Error parsing start time:", err)
 		os.Exit(1)
 	}
-	err = a.addTimeWorkUnit(&startTime, &stopTime, "", workingHoursConfig)
+	err = tracking.AddTimeWorkUnit(&startTime, &stopTime, "", workingHoursConfig, a)
 	if err != nil {
 		fmt.Println("Error adding time off:", err)
 		os.Exit(1)

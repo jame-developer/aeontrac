@@ -1,44 +1,48 @@
-package aeontrac
+package tracking
 
 import (
 	"github.com/google/uuid"
+	"github.com/jame-developer/aeontrac/aeontrac"
+	"github.com/jame-developer/aeontrac/pkg/errors"
+	"github.com/jame-developer/aeontrac/pkg/models"
+	"github.com/jame-developer/aeontrac/pkg/repositories"
 	"time"
 )
 
-// startTracking starts tracking a new unit of work. If a unit of work is already running, an error is returned.
+// StartTracking starts tracking a new unit of work. If a unit of work is already running, an error is returned.
 // An error is returned if the provided time is after the current time or within a previously completed unit of work.
 // If the provided time is not provided, the current time is used.
 // If the provided comment is not provided, the empty string is used.
 // The used type is alway "WORK".
-func (a *AeonVault) startTracking(startDateTime *time.Time, comment string) error {
+func StartTracking(startDateTime *time.Time, comment string, a *models.AeonVault) error {
 	newTrackingStart := time.Now()
 	if startDateTime != nil {
 		newTrackingStart = *startDateTime
 	}
 	if newTrackingStart.After(time.Now()) {
-		return ErrTimeInFuture
+		return errors.ErrTimeInFuture
 	}
 	if a.CurrentRunningUnit != nil {
-		return ErrUnitOfWorkRunning
+		return errors.ErrUnitOfWorkRunning
 	}
 	dayKey := newTrackingStart.Format(time.DateOnly)
 	newUnitID := uuid.New()
-	newUnit := newAeonUnit(&newTrackingStart, nil, comment, nil, workType)
+	newUnit := repositories.NewAeonUnit(&newTrackingStart, nil, comment, nil, repositories.WorkType)
 	if day, ok := a.Days[dayKey]; ok {
 		if day.Units == nil {
-			day.Units = make(map[uuid.UUID]AeonUnit)
+			day.Units = make(map[uuid.UUID]models.AeonUnit)
 			a.Days[dayKey] = day
 		}
 	} else {
-		a.Days[dayKey] = newAoenDay(*startDateTime)
+		a.Days[dayKey] = repositories.NewAoenDay(*startDateTime)
 	}
 	for _, unit := range a.Days[dayKey].Units {
 		if unit.Stop != nil && newTrackingStart.After(*unit.Start) && newTrackingStart.Before(*unit.Stop) {
-			return ErrTimeWithinCompletedUnit
+			return errors.ErrTimeWithinCompletedUnit
 		}
 	}
 	a.Days[dayKey].Units[newUnitID] = newUnit
-	a.CurrentRunningUnit = &AeonCurrentRunningUnit{
+	a.CurrentRunningUnit = &models.AeonCurrentRunningUnit{
 		DayKey: dayKey,
 		UnitID: newUnitID,
 	}
@@ -46,33 +50,33 @@ func (a *AeonVault) startTracking(startDateTime *time.Time, comment string) erro
 	return nil
 }
 
-// stopTracking stops the currently running unit of work.
+// StopTracking stops the currently running unit of work.
 // If no unit of work is running, an error is returned.
 // If the provided time is before the start time of the unit of work, an error is returned.
 // If the provided time is not provided, the current time is used.
-func (a *AeonVault) stopTracking(stopDateTime *time.Time, workingHoursConfig WorkingHoursConfig) error {
+func StopTracking(stopDateTime *time.Time, workingHoursConfig aeontrac.WorkingHoursConfig, a *models.AeonVault) error {
 	if a.CurrentRunningUnit == nil {
-		return ErrNoUnitOfWorkRunning
+		return errors.ErrNoUnitOfWorkRunning
 	}
 	stopTime := time.Now()
 	if stopDateTime != nil {
 		stopTime = *stopDateTime
 	}
 	if stopTime.Before(*a.Days[a.CurrentRunningUnit.DayKey].Units[a.CurrentRunningUnit.UnitID].Start) {
-		return ErrStopTimeBeforeStartTime
+		return errors.ErrStopTimeBeforeStartTime
 	}
 	runningUnit := a.Days[a.CurrentRunningUnit.DayKey].Units[a.CurrentRunningUnit.UnitID]
 	runningUnit.Stop = &stopTime
-	runningUnit.Duration = &AeonDuration{
+	runningUnit.Duration = &models.AeonDuration{
 		Duration: runningUnit.Stop.Sub(*runningUnit.Start),
 	}
 	a.Days[a.CurrentRunningUnit.DayKey].Units[a.CurrentRunningUnit.UnitID] = runningUnit
 	currentDay := a.Days[a.CurrentRunningUnit.DayKey]
 	if currentDay.TotalHours == nil {
-		currentDay.TotalHours = &AeonDuration{}
+		currentDay.TotalHours = &models.AeonDuration{}
 	}
 	if currentDay.OvertimeHours == nil {
-		currentDay.OvertimeHours = &AeonDuration{}
+		currentDay.OvertimeHours = &models.AeonDuration{}
 	}
 	totalDuration, overtimeDuration := calculateDayWorkDurations(currentDay, &runningUnit, workingHoursConfig)
 	currentDay.TotalHours.Duration = totalDuration
@@ -82,38 +86,38 @@ func (a *AeonVault) stopTracking(stopDateTime *time.Time, workingHoursConfig Wor
 	return nil
 }
 
-// addTimeWorkUnit adds a new unit of work with the provided start and stop times.
+// AddTimeWorkUnit adds a new unit of work with the provided start and stop times.
 // If the provided stop time is before the start time, an error is returned.
 // If the provided start time is within a previously completed unit of work, an error is returned.
 // If the provided stop time is within a previously completed unit of work, an error is returned.
-func (a *AeonVault) addTimeWorkUnit(startDateTime, stopDateTime *time.Time, comment string, workingHoursConfig WorkingHoursConfig) error {
+func AddTimeWorkUnit(startDateTime, stopDateTime *time.Time, comment string, workingHoursConfig aeontrac.WorkingHoursConfig, a *models.AeonVault) error {
 	if startDateTime.After(*stopDateTime) {
-		return ErrStopTimeBeforeStartTime
+		return errors.ErrStopTimeBeforeStartTime
 	}
 	dayKey := startDateTime.Format(time.DateOnly)
 	newUnitID := uuid.New()
-	newUnit := newAeonUnit(startDateTime, stopDateTime, comment, &AeonDuration{Duration: stopDateTime.Sub(*startDateTime)}, workType)
+	newUnit := repositories.NewAeonUnit(startDateTime, stopDateTime, comment, &models.AeonDuration{Duration: stopDateTime.Sub(*startDateTime)}, repositories.WorkType)
 	if day, ok := a.Days[dayKey]; ok {
 		if day.Units == nil {
-			day.Units = make(map[uuid.UUID]AeonUnit)
+			day.Units = make(map[uuid.UUID]models.AeonUnit)
 			a.Days[dayKey] = day
 		}
 	} else {
-		a.Days[dayKey] = newAoenDay(*startDateTime)
+		a.Days[dayKey] = repositories.NewAoenDay(*startDateTime)
 	}
 	for _, unit := range a.Days[dayKey].Units {
 		if (unit.Stop != nil && startDateTime.After(*unit.Start) && startDateTime.Before(*unit.Stop)) ||
 			(unit.Stop != nil && stopDateTime.After(*unit.Start) && stopDateTime.Before(*unit.Stop)) {
-			return ErrTimeWithinCompletedUnit
+			return errors.ErrTimeWithinCompletedUnit
 		}
 	}
 	currentDay := a.Days[dayKey]
 	currentDay.Units[newUnitID] = newUnit
 	if currentDay.TotalHours == nil {
-		currentDay.TotalHours = &AeonDuration{}
+		currentDay.TotalHours = &models.AeonDuration{}
 	}
 	if currentDay.OvertimeHours == nil {
-		currentDay.OvertimeHours = &AeonDuration{}
+		currentDay.OvertimeHours = &models.AeonDuration{}
 	}
 	totalDuration, overtimeDuration := calculateDayWorkDurations(currentDay, &newUnit, workingHoursConfig)
 	currentDay.TotalHours.Duration = totalDuration
@@ -126,38 +130,38 @@ func (a *AeonVault) addTimeWorkUnit(startDateTime, stopDateTime *time.Time, comm
 // If the provided stop time is before the start time, an error is returned.
 // If the provided start time is within a previously completed unit of work, an error is returned.
 // If the provided stop time is within a previously completed unit of work, an error is returned.
-func (a *AeonVault) addTimeCompensatoryUnit(startDateTime, stopDateTime *time.Time, comment string, workingHoursConfig WorkingHoursConfig) error {
+func addTimeCompensatoryUnit(startDateTime, stopDateTime *time.Time, comment string, workingHoursConfig aeontrac.WorkingHoursConfig, a *models.AeonVault) error {
 	if startDateTime.After(*stopDateTime) {
-		return ErrStopTimeBeforeStartTime
+		return errors.ErrStopTimeBeforeStartTime
 	}
 
 	dayKey := startDateTime.Format(time.DateOnly)
 	newUnitID := uuid.New()
-	newUnit := newAeonUnit(startDateTime, stopDateTime, comment, &AeonDuration{Duration: stopDateTime.Sub(*startDateTime)}, compensatoryType)
+	newUnit := repositories.NewAeonUnit(startDateTime, stopDateTime, comment, &models.AeonDuration{Duration: stopDateTime.Sub(*startDateTime)}, repositories.CompensatoryType)
 	if day, ok := a.Days[dayKey]; ok {
 		if day.Units == nil {
-			day.Units = make(map[uuid.UUID]AeonUnit)
+			day.Units = make(map[uuid.UUID]models.AeonUnit)
 			a.Days[dayKey] = day
 		}
 	} else {
-		a.Days[dayKey] = newAoenDay(*startDateTime)
+		a.Days[dayKey] = repositories.NewAoenDay(*startDateTime)
 	}
 	currentDay := a.Days[dayKey]
 	if currentDay.VacationDay || currentDay.PublicHoliday || currentDay.WeekEnd {
-		return ErrCompensationOnNonWorkDay
+		return errors.ErrCompensationOnNonWorkDay
 	}
 	for _, unit := range a.Days[dayKey].Units {
 		if (unit.Stop != nil && startDateTime.After(*unit.Start) && startDateTime.Before(*unit.Stop)) ||
 			(unit.Stop != nil && stopDateTime.After(*unit.Start) && stopDateTime.Before(*unit.Stop)) {
-			return ErrTimeWithinCompletedUnit
+			return errors.ErrTimeWithinCompletedUnit
 		}
 	}
 	currentDay.Units[newUnitID] = newUnit
 	if currentDay.TotalHours == nil {
-		currentDay.TotalHours = &AeonDuration{}
+		currentDay.TotalHours = &models.AeonDuration{}
 	}
 	if currentDay.OvertimeHours == nil {
-		currentDay.OvertimeHours = &AeonDuration{}
+		currentDay.OvertimeHours = &models.AeonDuration{}
 	}
 	totalDuration, overtimeDuration := calculateDayCompensatoryDurations(currentDay, &newUnit, workingHoursConfig)
 	currentDay.TotalHours.Duration = totalDuration
@@ -167,7 +171,7 @@ func (a *AeonVault) addTimeCompensatoryUnit(startDateTime, stopDateTime *time.Ti
 }
 
 // calculateDayWorkDurations calculates the total and overtime hours for a day.
-func calculateDayWorkDurations(currentDay *AeonDay, newUnit *AeonUnit, workingHoursConfig WorkingHoursConfig) (time.Duration, time.Duration) {
+func calculateDayWorkDurations(currentDay *models.AeonDay, newUnit *models.AeonUnit, workingHoursConfig aeontrac.WorkingHoursConfig) (time.Duration, time.Duration) {
 	totalHours := currentDay.TotalHours.Duration
 	overtimeHours := currentDay.OvertimeHours.Duration
 	totalHours += newUnit.Duration.Duration
@@ -183,7 +187,7 @@ func calculateDayWorkDurations(currentDay *AeonDay, newUnit *AeonUnit, workingHo
 }
 
 // calculateDayCompensatoryDurations calculates the total and overtime hours for a day with compensatory time.
-func calculateDayCompensatoryDurations(currentDay *AeonDay, newUnit *AeonUnit, workingHoursConfig WorkingHoursConfig) (time.Duration, time.Duration) {
+func calculateDayCompensatoryDurations(currentDay *models.AeonDay, newUnit *models.AeonUnit, workingHoursConfig aeontrac.WorkingHoursConfig) (time.Duration, time.Duration) {
 	totalHours := currentDay.TotalHours.Duration
 	overtimeHours := currentDay.OvertimeHours.Duration
 	totalHours -= newUnit.Duration.Duration

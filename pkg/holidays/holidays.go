@@ -1,9 +1,10 @@
-package aeontrac
+package holidays
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/jame-developer/aeontrac/aeontrac"
 	"io"
 	"net/http"
 	url2 "net/url"
@@ -34,11 +35,11 @@ type (
 	}
 )
 
-// loadHolidays loads the public holidays from the API and saves them to the database
+// LoadHolidays loads the public holidays from the API and saves them to the database
 // It returns the list of public holidays and an error if any.
 // It uses the provided configuration to load the public holidays.
 // It uses the Open Holidays API to load the public holidays. See https://openholidaysapi.org/
-func loadHolidays(config PublicHolidaysConfig, year int) (map[string]holidayItem, error) {
+func LoadHolidays(config aeontrac.PublicHolidaysConfig, year int) (map[string]holidayItem, error) {
 	u, _ := url2.Parse(config.APIURL)
 	u.RawQuery = url2.Values{"countryIsoCode": {config.Country}, "validFrom": {fmt.Sprintf("%d-01-01", year)}, "validTo": {fmt.Sprintf("%d-12-31", year)}}.Encode()
 	var res, err = http.Get(u.String())

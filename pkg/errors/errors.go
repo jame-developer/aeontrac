@@ -1,4 +1,4 @@
-package aeontrac
+package errors
 
 type AeonError string
 

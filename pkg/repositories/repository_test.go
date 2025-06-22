@@ -1,8 +1,10 @@
-package aeontrac
+package repositories
 
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/jame-developer/aeontrac/aeontrac"
+	"github.com/jame-developer/aeontrac/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
@@ -27,15 +29,15 @@ func TestNewAeonVault(t *testing.T) {
 	tests := []struct {
 		name                 string
 		year                 int
-		publicHolidaysConfig PublicHolidaysConfig
-		workingHoursConfig   WorkingHoursConfig
+		publicHolidaysConfig aeontrac.PublicHolidaysConfig
+		workingHoursConfig   aeontrac.WorkingHoursConfig
 		expectedError        error
 		expectedHolidays     []time.Time
 	}{
 		{
 			name: "ValidInputWithHolidays",
 			year: 2024,
-			publicHolidaysConfig: PublicHolidaysConfig{
+			publicHolidaysConfig: aeontrac.PublicHolidaysConfig{
 				Enabled: true,
 				Country: "DE",
 				Region:  "",
@@ -197,35 +199,35 @@ func TestSaveAeonVault(t *testing.T) {
 	tests := []struct {
 		name          string
 		folder        string
-		data          AeonVault
+		data          models.AeonVault
 		expectedError bool
 	}{
 		{
 			name:   "FolderDoesNotExist",
 			folder: "./non_existent_folder",
-			data: AeonVault{
-				Days: map[string]*AeonDay{},
+			data: models.AeonVault{
+				Days: map[string]*models.AeonDay{},
 			},
 			expectedError: true,
 		},
 		{
 			name:   "InsufficientPermissions",
 			folder: "/root",
-			data: AeonVault{
-				Days: map[string]*AeonDay{},
+			data: models.AeonVault{
+				Days: map[string]*models.AeonDay{},
 			},
 			expectedError: true,
 		},
 		{
 			name:   "SuccessfullySaved",
 			folder: "./test_data",
-			data: AeonVault{
-				Days: map[string]*AeonDay{
+			data: models.AeonVault{
+				Days: map[string]*models.AeonDay{
 					"2024-01-01": {
 						IsoWeekNumber: 1,
 						IsoWeekDay:    1,
 						PublicHoliday: true,
-						Units:         map[uuid.UUID]AeonUnit{},
+						Units:         map[uuid.UUID]models.AeonUnit{},
 					},
 				},
 			},

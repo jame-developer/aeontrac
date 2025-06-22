@@ -1,7 +1,8 @@
-package aeontrac
+package holidays
 
 import (
 	"errors"
+	"github.com/jame-developer/aeontrac/aeontrac"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -84,7 +85,7 @@ func TestLoadHolidays(t *testing.T) {
 			handlerFunc: func(rw http.ResponseWriter, req *http.Request) {
 				http.Error(rw, "Internal Server Error", http.StatusInternalServerError)
 			},
-			expectedError:  errors.New("Get \"http://localhost:1234?countryIsoCode=US&validFrom=2024-01-01&validTo=2024-12-31\": dial tcp [::1]:1234: connect: connection refused"),
+			expectedError:  errors.New("Get \"http://localhost:1234?countryIsoCode=US&validFrom=2024-01-01&validTo=2024-12-31\": dial tcp 127.0.0.1:1234: connect: connection refused"),
 			breakUrl:       true,
 			expectedLength: 0,
 		},
@@ -106,12 +107,12 @@ func TestLoadHolidays(t *testing.T) {
 			if tt.breakUrl {
 				testUrl = "http://localhost:1234"
 			}
-			config := PublicHolidaysConfig{
+			config := aeontrac.PublicHolidaysConfig{
 				Country: "US",
 				APIURL:  testUrl,
 			}
 
-			holidays, err := loadHolidays(config, 2024)
+			holidays, err := LoadHolidays(config, 2024)
 
 			if tt.expectedError != nil {
 				assert.Error(t, err)

@@ -1,7 +1,9 @@
-package aeontrac
+package tracking
 
 import (
 	"github.com/google/uuid"
+	"github.com/jame-developer/aeontrac/aeontrac"
+	"github.com/jame-developer/aeontrac/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -16,25 +18,25 @@ func TestStartTracking(t *testing.T) {
 		name          string
 		startDateTime *time.Time
 		comment       string
-		setupFunc     func(a *AeonVault) // Function to setup the environment for the test
+		setupFunc     func(a *models.AeonVault) // Function to setup the environment for the test
 		expectedError bool
 	}{
 		{
 			name:          "UnitOfWorkAlreadyRunning",
 			startDateTime: &now,
 			comment:       "Test Comment",
-			setupFunc: func(a *AeonVault) {
+			setupFunc: func(a *models.AeonVault) {
 				// Setup your environment here where a unit of work is already running
 				dayKey := time.Now().Format(time.DateOnly)
 				unitId := uuid.New()
-				a.Days[dayKey] = &AeonDay{
-					Units: map[uuid.UUID]AeonUnit{
+				a.Days[dayKey] = &models.AeonDay{
+					Units: map[uuid.UUID]models.AeonUnit{
 						uuid.New(): {
 							Start: &nowMinusOneHour,
 						},
 					},
 				}
-				a.CurrentRunningUnit = &AeonCurrentRunningUnit{
+				a.CurrentRunningUnit = &models.AeonCurrentRunningUnit{
 					DayKey: dayKey,
 					UnitID: unitId,
 				}
@@ -45,11 +47,11 @@ func TestStartTracking(t *testing.T) {
 			name:          "ProvidedTimeIsWithinPreviouslyCompletedUnitOfWork",
 			startDateTime: &nowMinus30min,
 			comment:       "Test Comment",
-			setupFunc: func(a *AeonVault) {
+			setupFunc: func(a *models.AeonVault) {
 				// Setup your environment here where a unit of work is already completed within the provided time
 				dayKey := now.Format(time.DateOnly)
-				a.Days[dayKey] = &AeonDay{
-					Units: map[uuid.UUID]AeonUnit{
+				a.Days[dayKey] = &models.AeonDay{
+					Units: map[uuid.UUID]models.AeonUnit{
 						uuid.New(): {
 							Start: &nowMinusOneHour,
 							Stop:  &now,
@@ -63,24 +65,24 @@ func TestStartTracking(t *testing.T) {
 			name:          "StartedTrackingInTheFuture",
 			startDateTime: &nowPlusOneHour,
 			comment:       "Test Comment",
-			setupFunc:     func(a *AeonVault) {},
+			setupFunc:     func(a *models.AeonVault) {},
 			expectedError: true,
 		},
 		{
 			name:          "SuccessfullyStartedTrackingForNotExistingDay",
 			startDateTime: &now,
 			comment:       "Test Comment",
-			setupFunc:     func(a *AeonVault) {},
+			setupFunc:     func(a *models.AeonVault) {},
 			expectedError: false,
 		},
 		{
 			name:          "SuccessfullyStartedTrackingForExistingDay",
 			startDateTime: &now,
 			comment:       "Test Comment",
-			setupFunc: func(a *AeonVault) {
+			setupFunc: func(a *models.AeonVault) {
 				// Setup your environment here where a unit of work is already running
 				dayKey := now.Format(time.DateOnly)
-				a.Days[dayKey] = &AeonDay{
+				a.Days[dayKey] = &models.AeonDay{
 					Units: nil,
 				}
 			},
@@ -91,13 +93,13 @@ func TestStartTracking(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			a := &AeonVault{
-				Days: make(map[string]*AeonDay),
+			a := &models.AeonVault{
+				Days: make(map[string]*models.AeonDay),
 			}
 			tt.setupFunc(a)
 
 			// Call startTracking
-			err := a.startTracking(tt.startDateTime, tt.comment)
+			err := StartTracking(tt.startDateTime, tt.comment, a)
 
 			// Check the error
 			if tt.expectedError {
@@ -114,16 +116,16 @@ func TestStopTracking(t *testing.T) {
 	testDayKey := now.Format(time.DateOnly)
 	nowMinusOneHour := now.Add(-1 * time.Hour)
 	nowPlusOneHour := now.Add(1 * time.Hour)
-	testWorkingHoursConfig := WorkingHoursConfig{
+	testWorkingHoursConfig := aeontrac.WorkingHoursConfig{
 		Enabled:  true,
-		WorkDay:  &AeonDuration{Duration: 8 * time.Hour},
-		WorkWeek: &AeonDuration{Duration: 40 * time.Hour},
+		WorkDay:  &models.AeonDuration{Duration: 8 * time.Hour},
+		WorkWeek: &models.AeonDuration{Duration: 40 * time.Hour},
 	}
 	tests := []struct {
 		name               string
 		stopDateTime       *time.Time
-		workingHoursConfig WorkingHoursConfig
-		setupFunc          func(a *AeonVault) // Function to setup the environment for the test
+		workingHoursConfig aeontrac.WorkingHoursConfig
+		setupFunc          func(a *models.AeonVault) // Function to setup the environment for the test
 		expectedError      bool
 		expectedTotal      time.Duration
 		expectedOvertime   time.Duration
@@ -132,25 +134,25 @@ func TestStopTracking(t *testing.T) {
 			name:               "NoUnitOfWorkIsRunning",
 			stopDateTime:       &now,
 			workingHoursConfig: testWorkingHoursConfig,
-			setupFunc:          func(a *AeonVault) {},
+			setupFunc:          func(a *models.AeonVault) {},
 			expectedError:      true,
 		},
 		{
 			name:               "ProvidedTimeIsBeforeStartTime",
 			stopDateTime:       &nowMinusOneHour,
 			workingHoursConfig: testWorkingHoursConfig,
-			setupFunc: func(a *AeonVault) {
+			setupFunc: func(a *models.AeonVault) {
 				// Setup your environment here where a unit of work is already running
 				dayKey := testDayKey
 				unitId := uuid.New()
-				a.Days[dayKey] = &AeonDay{
-					Units: map[uuid.UUID]AeonUnit{
+				a.Days[dayKey] = &models.AeonDay{
+					Units: map[uuid.UUID]models.AeonUnit{
 						unitId: {
 							Start: &now,
 						},
 					},
 				}
-				a.CurrentRunningUnit = &AeonCurrentRunningUnit{
+				a.CurrentRunningUnit = &models.AeonCurrentRunningUnit{
 					DayKey: dayKey,
 					UnitID: unitId,
 				}
@@ -163,18 +165,18 @@ func TestStopTracking(t *testing.T) {
 			workingHoursConfig: testWorkingHoursConfig,
 			expectedOvertime:   -6 * time.Hour,
 			expectedTotal:      2 * time.Hour,
-			setupFunc: func(a *AeonVault) {
+			setupFunc: func(a *models.AeonVault) {
 				// Setup your environment here where a unit of work is already running
 				dayKey := testDayKey
 				unitId := uuid.New()
-				a.Days[dayKey] = &AeonDay{
-					Units: map[uuid.UUID]AeonUnit{
+				a.Days[dayKey] = &models.AeonDay{
+					Units: map[uuid.UUID]models.AeonUnit{
 						unitId: {
 							Start: &nowMinusOneHour,
 						},
 					},
 				}
-				a.CurrentRunningUnit = &AeonCurrentRunningUnit{
+				a.CurrentRunningUnit = &models.AeonCurrentRunningUnit{
 					DayKey: dayKey,
 					UnitID: unitId,
 				}
@@ -187,18 +189,18 @@ func TestStopTracking(t *testing.T) {
 			workingHoursConfig: testWorkingHoursConfig,
 			expectedOvertime:   -7 * time.Hour,
 			expectedTotal:      1 * time.Hour,
-			setupFunc: func(a *AeonVault) {
+			setupFunc: func(a *models.AeonVault) {
 				// Setup your environment here where a unit of work is already running
 				dayKey := testDayKey
 				unitId := uuid.New()
-				a.Days[dayKey] = &AeonDay{
-					Units: map[uuid.UUID]AeonUnit{
+				a.Days[dayKey] = &models.AeonDay{
+					Units: map[uuid.UUID]models.AeonUnit{
 						unitId: {
 							Start: &nowMinusOneHour,
 						},
 					},
 				}
-				a.CurrentRunningUnit = &AeonCurrentRunningUnit{
+				a.CurrentRunningUnit = &models.AeonCurrentRunningUnit{
 					DayKey: dayKey,
 					UnitID: unitId,
 				}
@@ -210,13 +212,13 @@ func TestStopTracking(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			a := &AeonVault{
-				Days: make(map[string]*AeonDay),
+			a := &models.AeonVault{
+				Days: make(map[string]*models.AeonDay),
 			}
 			tt.setupFunc(a)
 
 			// Call stopTracking
-			err := a.stopTracking(tt.stopDateTime, tt.workingHoursConfig)
+			err := StopTracking(tt.stopDateTime, tt.workingHoursConfig, a)
 
 			// Check the error
 			if tt.expectedError {
@@ -240,18 +242,18 @@ func TestAddTimeWorkUnit(t *testing.T) {
 	testDayKey := testStartTime.Format(time.DateOnly)
 	testWeekendStartTime, _ := time.Parse(time.RFC3339, "2020-02-08T13:00:00Z")
 	testWeekendStopTime, _ := time.Parse(time.RFC3339, "2020-02-08T17:00:00Z")
-	testWorkingHoursConfig := WorkingHoursConfig{
+	testWorkingHoursConfig := aeontrac.WorkingHoursConfig{
 		Enabled:  true,
-		WorkDay:  &AeonDuration{Duration: 8 * time.Hour},
-		WorkWeek: &AeonDuration{Duration: 40 * time.Hour},
+		WorkDay:  &models.AeonDuration{Duration: 8 * time.Hour},
+		WorkWeek: &models.AeonDuration{Duration: 40 * time.Hour},
 	}
 	tests := []struct {
 		name               string
 		startDateTime      *time.Time
 		stopDateTime       *time.Time
-		workingHoursConfig WorkingHoursConfig
+		workingHoursConfig aeontrac.WorkingHoursConfig
 		comment            string
-		setupFunc          func(a *AeonVault) // Function to setup the environment for the test
+		setupFunc          func(a *models.AeonVault) // Function to setup the environment for the test
 		expectedError      bool
 		expectedTotal      time.Duration
 		expectedOvertime   time.Duration
@@ -262,7 +264,7 @@ func TestAddTimeWorkUnit(t *testing.T) {
 			stopDateTime:       &testStartTime,
 			workingHoursConfig: testWorkingHoursConfig,
 			comment:            "Test Comment",
-			setupFunc:          func(a *AeonVault) {},
+			setupFunc:          func(a *models.AeonVault) {},
 			expectedError:      true,
 		},
 		{
@@ -271,11 +273,11 @@ func TestAddTimeWorkUnit(t *testing.T) {
 			stopDateTime:       &testStopTime,
 			workingHoursConfig: testWorkingHoursConfig,
 			comment:            "Test Comment",
-			setupFunc: func(a *AeonVault) {
+			setupFunc: func(a *models.AeonVault) {
 				// Setup your environment here where a unit of work is already completed within the provided start time
 				dayKey := testDayKey
-				a.Days[dayKey] = &AeonDay{
-					Units: map[uuid.UUID]AeonUnit{
+				a.Days[dayKey] = &models.AeonDay{
+					Units: map[uuid.UUID]models.AeonUnit{
 						uuid.New(): {
 							Start: &testPastStartTime,
 							Stop:  &testPastStopTime,
@@ -291,11 +293,11 @@ func TestAddTimeWorkUnit(t *testing.T) {
 			stopDateTime:       &testOverlappingStopTime,
 			workingHoursConfig: testWorkingHoursConfig,
 			comment:            "Test Comment",
-			setupFunc: func(a *AeonVault) {
+			setupFunc: func(a *models.AeonVault) {
 				// Setup your environment here where a unit of work is already completed within the provided stop time
 				dayKey := testDayKey
-				a.Days[dayKey] = &AeonDay{
-					Units: map[uuid.UUID]AeonUnit{
+				a.Days[dayKey] = &models.AeonDay{
+					Units: map[uuid.UUID]models.AeonUnit{
 						uuid.New(): {
 							Start: &testStartTime,
 							Stop:  &testStopTime,
@@ -311,7 +313,7 @@ func TestAddTimeWorkUnit(t *testing.T) {
 			stopDateTime:       &testStopTime,
 			workingHoursConfig: testWorkingHoursConfig,
 			comment:            "Test Comment",
-			setupFunc:          func(a *AeonVault) {},
+			setupFunc:          func(a *models.AeonVault) {},
 			expectedError:      false,
 			expectedTotal:      4 * time.Hour,
 			expectedOvertime:   -4 * time.Hour,
@@ -322,7 +324,7 @@ func TestAddTimeWorkUnit(t *testing.T) {
 			stopDateTime:       &testWeekendStopTime,
 			workingHoursConfig: testWorkingHoursConfig,
 			comment:            "Test Comment",
-			setupFunc:          func(a *AeonVault) {},
+			setupFunc:          func(a *models.AeonVault) {},
 			expectedError:      false,
 			expectedTotal:      4 * time.Hour,
 			expectedOvertime:   4 * time.Hour,
@@ -333,18 +335,18 @@ func TestAddTimeWorkUnit(t *testing.T) {
 			stopDateTime:       &testStopTime,
 			workingHoursConfig: testWorkingHoursConfig,
 			comment:            "Test Comment",
-			setupFunc: func(a *AeonVault) {
+			setupFunc: func(a *models.AeonVault) {
 				// Setup your environment here where a unit of work is already running
 				dayKey := testDayKey
 				unitId := uuid.New()
-				a.Days[dayKey] = &AeonDay{
-					TotalHours:    &AeonDuration{Duration: 4 * time.Hour},
-					OvertimeHours: &AeonDuration{Duration: -4 * time.Hour},
-					Units: map[uuid.UUID]AeonUnit{
+				a.Days[dayKey] = &models.AeonDay{
+					TotalHours:    &models.AeonDuration{Duration: 4 * time.Hour},
+					OvertimeHours: &models.AeonDuration{Duration: -4 * time.Hour},
+					Units: map[uuid.UUID]models.AeonUnit{
 						unitId: {
 							Start: &testPastStartTime,
 							Stop:  &testPastStopTime,
-							Duration: &AeonDuration{ // 4 hours
+							Duration: &models.AeonDuration{ // 4 hours
 								Duration: testPastStopTime.Sub(testPastStartTime),
 							},
 						},
@@ -360,13 +362,13 @@ func TestAddTimeWorkUnit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			a := &AeonVault{
-				Days: make(map[string]*AeonDay),
+			a := &models.AeonVault{
+				Days: make(map[string]*models.AeonDay),
 			}
 			tt.setupFunc(a)
 
 			// Call addTimeWorkUnit
-			err := a.addTimeWorkUnit(tt.startDateTime, tt.stopDateTime, tt.comment, tt.workingHoursConfig)
+			err := AddTimeWorkUnit(tt.startDateTime, tt.stopDateTime, tt.comment, tt.workingHoursConfig, a)
 
 			// Check the error
 			if tt.expectedError {
@@ -391,18 +393,18 @@ func TestAddTimeCompensatoryUnit(t *testing.T) {
 	testDayKey := testStartTime.Format(time.DateOnly)
 	testWeekendStartTime, _ := time.Parse(time.RFC3339, "2020-02-08T13:00:00Z")
 	testWeekendStopTime, _ := time.Parse(time.RFC3339, "2020-02-08T17:00:00Z")
-	testWorkingHoursConfig := WorkingHoursConfig{
+	testWorkingHoursConfig := aeontrac.WorkingHoursConfig{
 		Enabled:  true,
-		WorkDay:  &AeonDuration{Duration: 8 * time.Hour},
-		WorkWeek: &AeonDuration{Duration: 40 * time.Hour},
+		WorkDay:  &models.AeonDuration{Duration: 8 * time.Hour},
+		WorkWeek: &models.AeonDuration{Duration: 40 * time.Hour},
 	}
 	tests := []struct {
 		name               string
 		startDateTime      *time.Time
 		stopDateTime       *time.Time
-		workingHoursConfig WorkingHoursConfig
+		workingHoursConfig aeontrac.WorkingHoursConfig
 		comment            string
-		setupFunc          func(a *AeonVault) // Function to setup the environment for the test
+		setupFunc          func(a *models.AeonVault) // Function to setup the environment for the test
 		expectedError      bool
 		expectedTotal      time.Duration
 		expectedOvertime   time.Duration
@@ -413,7 +415,7 @@ func TestAddTimeCompensatoryUnit(t *testing.T) {
 			stopDateTime:       &testStartTime,
 			workingHoursConfig: testWorkingHoursConfig,
 			comment:            "Test Comment",
-			setupFunc:          func(a *AeonVault) {},
+			setupFunc:          func(a *models.AeonVault) {},
 			expectedError:      true,
 		},
 		{
@@ -422,11 +424,11 @@ func TestAddTimeCompensatoryUnit(t *testing.T) {
 			stopDateTime:       &testStopTime,
 			workingHoursConfig: testWorkingHoursConfig,
 			comment:            "Test Comment",
-			setupFunc: func(a *AeonVault) {
+			setupFunc: func(a *models.AeonVault) {
 				// Setup your environment here where a unit of work is already completed within the provided start time
 				dayKey := testDayKey
-				a.Days[dayKey] = &AeonDay{
-					Units: map[uuid.UUID]AeonUnit{
+				a.Days[dayKey] = &models.AeonDay{
+					Units: map[uuid.UUID]models.AeonUnit{
 						uuid.New(): {
 							Start: &testPastStartTime,
 							Stop:  &testPastStopTime,
@@ -442,11 +444,11 @@ func TestAddTimeCompensatoryUnit(t *testing.T) {
 			stopDateTime:       &testOverlappingStopTime,
 			workingHoursConfig: testWorkingHoursConfig,
 			comment:            "Test Comment",
-			setupFunc: func(a *AeonVault) {
+			setupFunc: func(a *models.AeonVault) {
 				// Setup your environment here where a unit of work is already completed within the provided stop time
 				dayKey := testDayKey
-				a.Days[dayKey] = &AeonDay{
-					Units: map[uuid.UUID]AeonUnit{
+				a.Days[dayKey] = &models.AeonDay{
+					Units: map[uuid.UUID]models.AeonUnit{
 						uuid.New(): {
 							Start: &testStartTime,
 							Stop:  &testStopTime,
@@ -462,7 +464,7 @@ func TestAddTimeCompensatoryUnit(t *testing.T) {
 			stopDateTime:       &testStopTime,
 			workingHoursConfig: testWorkingHoursConfig,
 			comment:            "Test Comment",
-			setupFunc:          func(a *AeonVault) {},
+			setupFunc:          func(a *models.AeonVault) {},
 			expectedError:      false,
 			expectedTotal:      -4 * time.Hour,
 			expectedOvertime:   -12 * time.Hour,
@@ -473,7 +475,7 @@ func TestAddTimeCompensatoryUnit(t *testing.T) {
 			stopDateTime:       &testWeekendStopTime,
 			workingHoursConfig: testWorkingHoursConfig,
 			comment:            "Test Comment",
-			setupFunc:          func(a *AeonVault) {},
+			setupFunc:          func(a *models.AeonVault) {},
 			expectedError:      true,
 		},
 		{
@@ -482,18 +484,18 @@ func TestAddTimeCompensatoryUnit(t *testing.T) {
 			stopDateTime:       &testStopTime,
 			workingHoursConfig: testWorkingHoursConfig,
 			comment:            "Test Comment",
-			setupFunc: func(a *AeonVault) {
+			setupFunc: func(a *models.AeonVault) {
 				// Setup your environment here where a unit of work is already running
 				dayKey := testDayKey
 				unitId := uuid.New()
-				a.Days[dayKey] = &AeonDay{
-					TotalHours:    &AeonDuration{Duration: 4 * time.Hour},
-					OvertimeHours: &AeonDuration{Duration: -4 * time.Hour},
-					Units: map[uuid.UUID]AeonUnit{
+				a.Days[dayKey] = &models.AeonDay{
+					TotalHours:    &models.AeonDuration{Duration: 4 * time.Hour},
+					OvertimeHours: &models.AeonDuration{Duration: -4 * time.Hour},
+					Units: map[uuid.UUID]models.AeonUnit{
 						unitId: {
 							Start: &testPastStartTime,
 							Stop:  &testPastStopTime,
-							Duration: &AeonDuration{ // 4 hours
+							Duration: &models.AeonDuration{ // 4 hours
 								Duration: testPastStopTime.Sub(testPastStartTime),
 							},
 						},
@@ -509,13 +511,13 @@ func TestAddTimeCompensatoryUnit(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			a := &AeonVault{
-				Days: make(map[string]*AeonDay),
+			a := &models.AeonVault{
+				Days: make(map[string]*models.AeonDay),
 			}
 			tt.setupFunc(a)
 
 			// Call addTimeWorkUnit
-			err := a.addTimeCompensatoryUnit(tt.startDateTime, tt.stopDateTime, tt.comment, tt.workingHoursConfig)
+			err := addTimeCompensatoryUnit(tt.startDateTime, tt.stopDateTime, tt.comment, tt.workingHoursConfig, a)
 
 			// Check the error
 			if tt.expectedError {

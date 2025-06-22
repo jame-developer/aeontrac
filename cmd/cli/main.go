@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/jame-developer/aeontrac/aeontrac"
 	"github.com/jame-developer/aeontrac/configuration"
+	"github.com/jame-developer/aeontrac/pkg/commands"
+	"github.com/jame-developer/aeontrac/pkg/reporting"
+	"github.com/jame-developer/aeontrac/pkg/repositories"
 	"os"
 	"path/filepath"
 	"time"
@@ -56,22 +58,22 @@ func main() {
 		return
 	}
 	valdtr := validator.New()
-	data, err := aeontrac.LoadAeonVault(dataFolder, valdtr)
+	data, err := repositories.LoadAeonVault(dataFolder, valdtr)
 	if err != nil {
-		data, err = aeontrac.NewAeonVault(time.Now().Year(), config.PublicHolidays)
+		data, err = repositories.NewAeonVault(time.Now().Year(), config.PublicHolidays)
 		if err != nil {
 			fmt.Println("Error creating new time tracking data:", err)
 			return
 		}
 	}
 
-	_ = aeontrac.SaveAeonVault(dataFolder, data)
+	_ = repositories.SaveAeonVault(dataFolder, data)
 	var rootCmd = &cobra.Command{
 		Use:     "",
 		Short:   "TimeLord is a time tracking system",
 		Version: "0.1",
 		Run: func(cmd *cobra.Command, args []string) {
-			data.PrintTodayReport(config.WorkingHours)
+			reporting.PrintTodayReport(config.WorkingHours, &data)
 		},
 	}
 
@@ -80,8 +82,8 @@ func main() {
 		Short: "Start time tracking for a new unit of work",
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			data.StartCommand(args)
-			data.PrintTodayReport(config.WorkingHours)
+			commands.StartCommand(args, &data)
+			reporting.PrintTodayReport(config.WorkingHours, &data)
 		},
 	}
 	var stopCmd = &cobra.Command{
@@ -89,8 +91,8 @@ func main() {
 		Short: "Stop time tracking for a unit of work",
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			data.StopCommand(args, config.WorkingHours)
-			data.PrintTodayReport(config.WorkingHours)
+			commands.StopCommand(args, config.WorkingHours, &data)
+			reporting.PrintTodayReport(config.WorkingHours, &data)
 		},
 	}
 	var addCmd = &cobra.Command{
@@ -98,7 +100,7 @@ func main() {
 		Short: "Add a time work unit",
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			data.AddTimeWorkUnitCommand(args, config.WorkingHours)
+			commands.AddTimeWorkUnitCommand(args, config.WorkingHours, &data)
 		},
 	}
 	var quarterlyReportCmd = &cobra.Command{
@@ -106,7 +108,7 @@ func main() {
 		Short: "Add a time work unit",
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			data.PrintQuarterlyReport(config.WorkingHours)
+			reporting.PrintQuarterlyReport(config.WorkingHours, &data)
 		},
 	}
 	//var offCmd = &cobra.Command{
@@ -145,7 +147,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = aeontrac.SaveAeonVault(dataFolder, data)
+	err = repositories.SaveAeonVault(dataFolder, data)
 	if err != nil {
 		fmt.Println("Error saving time tracking data:", err)
 		return

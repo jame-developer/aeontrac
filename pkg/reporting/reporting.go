@@ -1,7 +1,9 @@
-package aeontrac
+package reporting
 
 import (
 	"fmt"
+	"github.com/jame-developer/aeontrac/aeontrac"
+	"github.com/jame-developer/aeontrac/pkg/models"
 	"log"
 	"sort"
 	"strings"
@@ -10,7 +12,7 @@ import (
 
 const unitLineTmpl = "%s %s\t%s\t%s"
 
-func (a *AeonVault) PrintTodayReport(workingHoursConfig WorkingHoursConfig) {
+func PrintTodayReport(workingHoursConfig aeontrac.WorkingHoursConfig, a *models.AeonVault) {
 	today := a.Days[time.Now().Format(time.DateOnly)]
 	var reportLines []string
 	unitLines := map[int]string{}
@@ -47,7 +49,7 @@ func (a *AeonVault) PrintTodayReport(workingHoursConfig WorkingHoursConfig) {
 	}
 	overtime := total - workingHoursConfig.WorkDay.Duration
 	reportLines = append(reportLines, fmt.Sprintf("Overtime:\t%s", formatDuration(overtime)))
-	holidayLinesForNextDays := a.getHolidayLinesForNextDays(7)
+	holidayLinesForNextDays := getHolidayLinesForNextDays(7, a)
 	if len(holidayLinesForNextDays) > 0 {
 		reportLines = append(reportLines, "")
 		reportLines = append(reportLines, holidayLinesForNextDays...)
@@ -57,7 +59,7 @@ func (a *AeonVault) PrintTodayReport(workingHoursConfig WorkingHoursConfig) {
 	}
 }
 
-func (a *AeonVault) PrintQuarterlyReport(workingHoursConfig WorkingHoursConfig) {
+func PrintQuarterlyReport(workingHoursConfig aeontrac.WorkingHoursConfig, a *models.AeonVault) {
 	now := time.Now()
 	startOfCurrentMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 	startOfTwoMonthsBefore := startOfCurrentMonth.AddDate(0, -2, 0)
@@ -101,7 +103,7 @@ func (a *AeonVault) PrintQuarterlyReport(workingHoursConfig WorkingHoursConfig) 
 	}
 }
 
-func (a *AeonVault) getHolidayLinesForNextDays(nextNumberOfDays int) []string {
+func getHolidayLinesForNextDays(nextNumberOfDays int, a *models.AeonVault) []string {
 	currentDay := time.Now()
 	dayInNanoSeconds := int64(time.Hour * 24)
 	result := []string{}
