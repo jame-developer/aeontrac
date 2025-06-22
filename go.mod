@@ -1,4 +1,4 @@
-module aeontrac
+module github.com/jame-developer/aeontrac
 
 go 1.24
 

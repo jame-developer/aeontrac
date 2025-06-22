@@ -1,9 +1,9 @@
 package main
 
 import (
-	"aeontrac/aeontrac"
-	"aeontrac/configuration"
 	"fmt"
+	"github.com/jame-developer/aeontrac/aeontrac"
+	"github.com/jame-developer/aeontrac/configuration"
 	"os"
 	"path/filepath"
 	"time"

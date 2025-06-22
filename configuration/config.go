@@ -1,9 +1,9 @@
 package configuration
 
 import (
-	"aeontrac/aeontrac"
 	"encoding/json"
 	"errors"
+	"github.com/jame-developer/aeontrac/aeontrac"
 	"os"
 	"path/filepath"
 
