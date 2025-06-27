@@ -103,6 +103,65 @@ func PrintQuarterlyReport(workingHoursConfig configuration.WorkingHoursConfig, a
 	}
 }
 
+type TodayReportUnit struct {
+	Start    string `json:"start"`
+	Stop     string `json:"stop"`
+	Duration string `json:"duration"`
+	Running  bool   `json:"running"`
+}
+
+type TodayReport struct {
+	Units       []TodayReportUnit `json:"units"`
+	TotalHours  string            `json:"total_hours"`
+	Overtime    string            `json:"overtime"`
+	Holidays    []string          `json:"holidays,omitempty"`
+}
+
+func GetTodayReport(workingHoursConfig configuration.WorkingHoursConfig, a *models.AeonVault) TodayReport {
+	today := a.Days[time.Now().Format(time.DateOnly)]
+	var units []TodayReportUnit
+	var runningDuration time.Duration
+
+	for _, unit := range today.Units {
+		if unit.Duration != nil {
+			units = append(units, TodayReportUnit{
+				Start:    unit.Start.Format(time.TimeOnly),
+				Stop:     unit.Stop.Format(time.TimeOnly),
+				Duration: formatDuration(unit.Duration.Duration),
+				Running:  false,
+			})
+		} else {
+			now := time.Now()
+			runningDuration = now.Sub(*unit.Start)
+			units = append(units, TodayReportUnit{
+				Start:    unit.Start.Format(time.TimeOnly),
+				Stop:     now.Format(time.TimeOnly),
+				Duration: formatDuration(runningDuration),
+				Running:  true,
+			})
+		}
+	}
+
+	totalDuration := time.Duration(0)
+	if today.TotalHours != nil {
+		totalDuration = today.TotalHours.Duration + runningDuration
+	}
+
+	overtimeDuration := time.Duration(0)
+	if today.OvertimeHours != nil {
+		overtimeDuration = totalDuration - workingHoursConfig.WorkDay.Duration
+	}
+
+	holidays := getHolidayLinesForNextDays(7, a)
+
+	return TodayReport{
+		Units:      units,
+		TotalHours: formatDuration(totalDuration),
+		Overtime:   formatDuration(overtimeDuration),
+		Holidays:   holidays,
+	}
+}
+
 func getHolidayLinesForNextDays(nextNumberOfDays int, a *models.AeonVault) []string {
 	currentDay := time.Now()
 	dayInNanoSeconds := int64(time.Hour * 24)

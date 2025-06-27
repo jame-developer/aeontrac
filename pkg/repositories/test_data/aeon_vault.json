@@ -1,0 +1,11 @@
+{
+    "aeon_days": {
+        "2024-01-01": {
+            "iso_week_number": 1,
+            "iso_week_day": 1,
+            "public_holiday": true,
+            "vacation_day": false,
+            "week_end": false
+        }
+    }
+}

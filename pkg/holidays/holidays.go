@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/jame-developer/aeontrac/configuration"
 	"io"
 	"net/http"
 	url2 "net/url"
 	"strings"
 	"time"
+
+	"github.com/jame-developer/aeontrac/configuration"
 )
 
 type (
