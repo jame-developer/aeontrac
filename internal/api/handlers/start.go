@@ -8,10 +8,10 @@ import (
 
 	"github.com/jame-developer/aeontrac/internal/appcore"
 	"github.com/jame-developer/aeontrac/pkg/commands"
-	"github.com/jame-developer/aeontrac/cmd/api/middleware"
+	"github.com/jame-developer/aeontrac/internal/api/middleware"
 )
 
-func StopHandler(c *gin.Context) {
+func StartHandler(c *gin.Context) {
 	loggerIface, exists := c.Get(middleware.LoggerKey)
 	var logger *zap.Logger
 	if exists {
@@ -43,12 +43,12 @@ func StopHandler(c *gin.Context) {
 		args = append(args, *req.Time)
 	}
 
-	commands.StopCommand(args, config.WorkingHours, data)
+	commands.StartCommand(args, data)
 	if err := appcore.SaveApp(config, data, dataFolder); err != nil {
 		logger.Error("Failed to save app", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save app"})
 		return
 	}
 
-	c.String(http.StatusOK, "Time tracking stopped successfully.")
+	c.String(http.StatusOK, "Time tracking started successfully.")
 }

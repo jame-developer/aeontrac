@@ -4,8 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/jame-developer/aeontrac/cmd/api/middleware"
-	"github.com/jame-developer/aeontrac/cmd/api/handlers"
+	"github.com/jame-developer/aeontrac/internal/api/middleware"
+	"github.com/jame-developer/aeontrac/internal/api/handlers"
 )
 
 func SetupRouter(logger *zap.Logger) *gin.Engine {

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jame-developer/aeontrac/cmd/api/handlers"
-	"github.com/jame-developer/aeontrac/cmd/api/router"
+	"github.com/jame-developer/aeontrac/internal/api/handlers"
+	"github.com/jame-developer/aeontrac/internal/api/router"
 	"github.com/jame-developer/aeontrac/internal/appcore"
 	"github.com/jame-developer/aeontrac/pkg/reporting"
 	"go.uber.org/zap"

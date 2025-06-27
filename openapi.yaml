@@ -1,0 +1,169 @@
+openapi: 3.1.0
+info:
+  title: AeonTrac REST API
+  version: 1.0.0
+  description: A REST API for the AeonTrac time tracking application.
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+paths:
+  /start:
+    post:
+      summary: Start a new time tracking session
+      description: Starts a new time tracking session for either work or compensatory time.
+      requestBody:
+        description: Type of session and an optional comment.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartRequest'
+      responses:
+        '200':
+          description: Session started successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartResponse'
+        '400':
+          description: Bad request, e.g., a session is already running.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /stop:
+    post:
+      summary: Stop the current time tracking session
+      description: Stops the currently active time tracking session.
+      requestBody:
+        description: An optional comment to add to the session upon stopping.
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StopRequest'
+      responses:
+        '200':
+          description: Session stopped successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StopResponse'
+        '400':
+          description: Bad request, e.g., no session is currently running.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /report:
+    get:
+      summary: Retrieve a time tracking report
+      description: Generates a summary report of all tracked time, including total hours and overtime.
+      responses:
+        '200':
+          description: A summary report of tracked time.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    StartRequest:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [WORK, COMPENSATORY]
+          description: The type of time unit to start.
+        comment:
+          type: string
+          description: An optional comment for the session.
+    StartResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: started
+        unit_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        start:
+          type: string
+          format: date-time
+          example: '2025-06-20T09:00:00Z'
+    StopRequest:
+      type: object
+      properties:
+        comment:
+          type: string
+          description: An optional comment to add to the session.
+    StopResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: stopped
+        unit_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        stop:
+          type: string
+          format: date-time
+          example: '2025-06-20T17:00:00Z'
+        duration:
+          type: string
+          example: '08:00:00'
+    ReportResponse:
+      type: object
+      properties:
+        total_hours:
+          type: string
+          example: '40:00:00'
+        overtime_hours:
+          type: string
+          example: '05:00:00'
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/DayReport'
+    DayReport:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          example: '2025-06-20'
+        total_hours:
+          type: string
+          example: '08:00:00'
+        overtime_hours:
+          type: string
+          example: '01:00:00'
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: A message describing the error.

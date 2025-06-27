@@ -14,8 +14,14 @@ cd aeontrac
 # Build the application
 go build -o aeontrac cmd/cli/main.go
 
+# (Optional) Build the REST API server
+go build -o aeontrac-api cmd/api/main.go
+
 # Run the application
 ./aeontrac
+
+# Run the REST API server
+./aeontrac-api
 ```
 
 ## Features
@@ -42,6 +48,100 @@ go build -o aeontrac cmd/cli/main.go
 - Public holiday forecasting for upcoming days
 - Duration formatting in HH:MM:SS
 - Standalone quarterly report tool (`cmd/quartly.go`) for additional reporting options
+
+## REST API
+
+AeonTrac provides a REST API for programmatic access to time tracking features. This allows integration with other tools and automation of time tracking workflows.
+
+### Running the API Server
+
+To build and run the REST API server:
+
+```bash
+go build -o aeontrac-api cmd/api/main.go
+./aeontrac-api
+```
+
+By default, the server listens on port 8080. You can interact with the API using `curl`, Postman, or any HTTP client.
+
+### API Endpoints
+
+#### 1. `/start`
+
+- **Method:** `POST`
+- **Description:** Start a new time tracking session.
+- **Request Body:**
+  ```json
+  {
+    "type": "WORK",         // "WORK" or "COMPENSATORY"
+    "comment": "Optional comment for this session"
+  }
+  ```
+- **Example Request:**
+  ```bash
+  curl -X POST http://localhost:8080/start \
+    -H "Content-Type: application/json" \
+    -d '{"type":"WORK","comment":"Project development"}'
+  ```
+- **Example Response:**
+  ```json
+  {
+    "status": "started",
+    "unit_id": "550e8400-e29b-41d4-a716-446655440000",
+    "start": "2025-06-20T09:00:00Z"
+  }
+  ```
+
+#### 2. `/stop`
+
+- **Method:** `POST`
+- **Description:** Stop the currently running time tracking session.
+- **Request Body:** _(optional)_ You may include a comment.
+  ```json
+  {
+    "comment": "Finished for today"
+  }
+  ```
+- **Example Request:**
+  ```bash
+  curl -X POST http://localhost:8080/stop \
+    -H "Content-Type: application/json" \
+    -d '{"comment":"Finished for today"}'
+  ```
+- **Example Response:**
+  ```json
+  {
+    "status": "stopped",
+    "unit_id": "550e8400-e29b-41d4-a716-446655440000",
+    "stop": "2025-06-20T17:00:00Z",
+    "duration": "08:00:00"
+  }
+  ```
+
+#### 3. `/report`
+
+- **Method:** `GET`
+- **Description:** Retrieve a summary report of tracked time.
+- **Request Body:** _None_
+- **Example Request:**
+  ```bash
+  curl http://localhost:8080/report
+  ```
+- **Example Response:**
+  ```json
+  {
+    "total_hours": "40:00:00",
+    "overtime_hours": "05:00:00",
+    "days": [
+      {
+        "date": "2025-06-20",
+        "total_hours": "08:00:00",
+        "overtime_hours": "01:00:00"
+      }
+      // ... more days
+    ]
+  }
+  ```
 
 ## Data Model
 

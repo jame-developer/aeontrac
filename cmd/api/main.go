@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jame-developer/aeontrac/cmd/api/router"
+	"github.com/jame-developer/aeontrac/internal/api/router"
 	"go.uber.org/zap"
 )
 

@@ -8,7 +8,7 @@ import (
 
 	"github.com/jame-developer/aeontrac/internal/appcore"
 	"github.com/jame-developer/aeontrac/pkg/reporting"
-	"github.com/jame-developer/aeontrac/cmd/api/middleware"
+	"github.com/jame-developer/aeontrac/internal/api/middleware"
 )
 
 func ReportHandler(c *gin.Context) {
