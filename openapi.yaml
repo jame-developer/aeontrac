@@ -37,6 +37,52 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      x-code-samples:
+        - lang: curl
+          label: curl
+          source: |
+            curl -X POST "http://localhost:8080/start" \
+            -H "Content-Type: application/json" \
+            -d '{"type":"WORK","comment":"Starting work session"}'
+        - lang: JavaScript
+          label: JavaScript (fetch)
+          source: |
+            fetch('http://localhost:8080/start', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                type: 'WORK',
+                comment: 'Starting work session'
+              })
+            })
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch(error => console.error('Error:', error));
+        - lang: Go
+          label: Go (net/http)
+          source: |
+            package main
+
+            import (
+              "bytes"
+              "fmt"
+              "net/http"
+              "io/ioutil"
+            )
+
+            func main() {
+              jsonData := []byte(`{"type":"WORK","comment":"Starting work session"}`)
+              resp, err := http.Post("http://localhost:8080/start", "application/json", bytes.NewBuffer(jsonData))
+              if err != nil {
+                fmt.Println("Error:", err)
+                return
+              }
+              defer resp.Body.Close()
+              body, _ := ioutil.ReadAll(resp.Body)
+              fmt.Println(string(body))
+            }
   /stop:
     post:
       summary: Stop the current time tracking session
@@ -67,6 +113,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      x-code-samples:
+        - lang: curl
+          label: curl
+          source: |
+            curl -X POST "http://localhost:8080/stop" \
+            -H "Content-Type: application/json" \
+            -d '{"comment":"Stopping the session"}'
+        - lang: JavaScript
+          label: JavaScript (fetch)
+          source: |
+            fetch('http://localhost:8080/stop', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                comment: 'Stopping the session'
+              })
+            })
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch(error => console.error('Error:', error));
+        - lang: Go
+          label: Go (net/http)
+          source: |
+            package main
+
+            import (
+              "bytes"
+              "fmt"
+              "net/http"
+              "io/ioutil"
+            )
+
+            func main() {
+              jsonData := []byte(`{"comment":"Stopping the session"}`)
+              resp, err := http.Post("http://localhost:8080/stop", "application/json", bytes.NewBuffer(jsonData))
+              if err != nil {
+                fmt.Println("Error:", err)
+                return
+              }
+              defer resp.Body.Close()
+              body, _ := ioutil.ReadAll(resp.Body)
+              fmt.Println(string(body))
+            }
   /report:
     get:
       summary: Retrieve a time tracking report
@@ -84,6 +175,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      x-code-samples:
+        - lang: curl
+          label: curl
+          source: |
+            curl -X GET "http://localhost:8080/report"
+        - lang: JavaScript
+          label: JavaScript (fetch)
+          source: |
+            fetch('http://localhost:8080/report')
+              .then(response => response.json())
+              .then(data => console.log(data))
+              .catch(error => console.error('Error:', error));
+        - lang: Go
+          label: Go (net/http)
+          source: |
+            package main
+
+            import (
+              "fmt"
+              "io/ioutil"
+              "net/http"
+            )
+
+            func main() {
+              resp, err := http.Get("http://localhost:8080/report")
+              if err != nil {
+                fmt.Println("Error:", err)
+                return
+              }
+              defer resp.Body.Close()
+              body, _ := ioutil.ReadAll(resp.Body)
+              fmt.Println(string(body))
+            }
 components:
   schemas:
     StartRequest:
