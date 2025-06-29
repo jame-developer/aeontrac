@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"aeontrac/internal/service"
-	"aeontrac/pkg/models"
+	"github.com/jame-developer/aeontrac/internal/service"
+	"github.com/jame-developer/aeontrac/pkg/models"
 	"github.com/gin-gonic/gin"
 )
 
