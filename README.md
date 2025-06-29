@@ -279,6 +279,9 @@ The application includes robust error handling for:
 - github.com/go-playground/validator - Data validation
 - github.com/google/uuid - Unique identifier generation
 
+## Update redocly OpenAPI doc page
+run the following command in the project root `npx @redocly/cli build-docs --output=pkg/web/static/index.html openapi.yaml`
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
