@@ -78,7 +78,7 @@ func SaveAeonVault(folder string, data models.AeonVault) error {
 		_ = file.Close()
 	}(file)
 
-	_, err = io.WriteString(file, string(jsonData))
+	_, err = io.Writer.Write(file, jsonData)
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"go.uber.org/zap/zapcore"
 	"log"
 	"net/http"
@@ -23,7 +24,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
 	}
-	defer logger.Sync()
+	defer func(logger *zap.Logger) {
+		_ = logger.Sync()
+	}(logger)
 
 	// Setup router
 	r := router.SetupRouter(logger)
@@ -37,7 +40,7 @@ func main() {
 	// Start server in a goroutine
 	go func() {
 		logger.Info("Starting server on port :8080")
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logger.Fatal("listen: %s\n", zap.Error(err))
 		}
 	}()

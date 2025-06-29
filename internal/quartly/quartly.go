@@ -3,13 +3,13 @@ package quartly
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"time"
 )
 
-// Define your structs for unmarshalling the JSON data
+// Day Define your structs for unmarshalling the JSON data
 type Day struct {
 	IsoWeekNumber     int    `json:"iso_week_number"`
 	IsoWeekDay        int    `json:"iso_week_day"`
@@ -31,10 +31,12 @@ func Run() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
 
 	// Read JSON file
-	byteValue, err := ioutil.ReadAll(file)
+	byteValue, err := io.ReadAll(file)
 	if err != nil {
 		log.Fatal(err)
 	}

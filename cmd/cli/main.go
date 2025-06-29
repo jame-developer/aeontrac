@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"github.com/jame-developer/aeontrac/internal/cli"
+	"os"
 )
-
 
 func main() {
 	if err := cli.Run(); err != nil {
