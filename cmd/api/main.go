@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"go.uber.org/zap/zapcore"
 	"log"
 	"net/http"
 	"os"
@@ -15,7 +16,10 @@ import (
 
 func main() {
 	// Initialize logger
-	logger, err := zap.NewProduction()
+	loggerCfg := zap.NewProductionConfig()
+	loggerCfg.EncoderConfig.EncodeTime = zapcore.RFC3339NanoTimeEncoder
+	logger, err := loggerCfg.Build()
+
 	if err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
 	}
