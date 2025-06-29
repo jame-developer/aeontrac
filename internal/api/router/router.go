@@ -18,5 +18,7 @@ func SetupRouter(logger *zap.Logger) *gin.Engine {
 	r.POST("/start", handlers.StartHandler)
 	r.POST("/stop", handlers.StopHandler)
 
+	r.GET("/doc", handlers.DocHandler)
+
 	return r
 }
