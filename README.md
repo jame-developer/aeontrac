@@ -280,7 +280,10 @@ The application includes robust error handling for:
 - github.com/google/uuid - Unique identifier generation
 
 ## Update redocly OpenAPI doc page
-run the following command in the project root `npx @redocly/cli build-docs --output=pkg/web/static/index.html openapi.yaml`
+run the following command in the project root 
+```shell
+npx @redocly/cli build-docs --output=web/static/index.html openapi.yaml`
+```
 
 ## Contributing
 

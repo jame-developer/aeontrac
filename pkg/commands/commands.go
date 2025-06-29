@@ -46,7 +46,7 @@ func AddTimeWorkUnitCommand(args []string, workingHoursConfig configuration.Work
 	}
 	stopTime, err := parseTimeParam(args, 1)
 	if err != nil {
-		fmt.Println("Error parsing start time:", err)
+		fmt.Println("Error parsing stop time:", err)
 		os.Exit(1)
 	}
 	err = tracking.AddTimeWorkUnit(&startTime, &stopTime, "", workingHoursConfig, a)
