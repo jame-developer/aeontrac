@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
+	"github.com/jame-developer/aeontrac/internal/api/middleware"
 	"github.com/jame-developer/aeontrac/internal/appcore"
 	"github.com/jame-developer/aeontrac/pkg/commands"
-	"github.com/jame-developer/aeontrac/internal/api/middleware"
 )
 
 func StopHandler(c *gin.Context) {

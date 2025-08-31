@@ -3,9 +3,9 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/jame-developer/aeontrac/internal/service"
 	"github.com/jame-developer/aeontrac/pkg/models"
-	"github.com/gin-gonic/gin"
 )
 
 // AddWorkTimeHandler handles the addition of a new work time entry.

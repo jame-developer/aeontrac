@@ -20,6 +20,12 @@ func SetupRouter(logger *zap.Logger) *gin.Engine {
 	r.POST("/start", handlers.StartHandler)
 	r.POST("/stop", handlers.StopHandler)
 	r.POST("/worktime", handlers.AddWorkTimeHandler)
+	r.GET("/status", handlers.StatusHandler)
+
+	r.LoadHTMLGlob("web/templates/*")
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", nil)
+	})
 
 	r.StaticFS("/doc", http.Dir("web/static"))
 
