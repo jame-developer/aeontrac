@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
+	"github.com/jame-developer/aeontrac/internal/api/middleware"
 	"github.com/jame-developer/aeontrac/internal/appcore"
 	"github.com/jame-developer/aeontrac/pkg/reporting"
-	"github.com/jame-developer/aeontrac/internal/api/middleware"
 )
 
 func ReportHandler(c *gin.Context) {

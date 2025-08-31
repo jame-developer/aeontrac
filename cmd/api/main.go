@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"errors"
-	"go.uber.org/zap/zapcore"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"go.uber.org/zap/zapcore"
 
 	"github.com/jame-developer/aeontrac/internal/api/router"
 	"go.uber.org/zap"
