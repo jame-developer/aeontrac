@@ -162,6 +162,21 @@ paths:
     get:
       summary: Retrieve a time tracking report
       description: Generates a summary report of all tracked time, including total hours and overtime.
+      parameters:
+        - name: from
+          in: query
+          description: The start date for the report (YYYY-MM-DD).
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: The end date for the report (YYYY-MM-DD).
+          required: false
+          schema:
+            type: string
+            format: date
       responses:
         '200':
           description: A summary report of tracked time.

@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/jame-developer/aeontrac/internal/appcore"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/jame-developer/aeontrac/internal/api/router"
@@ -21,7 +22,11 @@ func main() {
 	loggerCfg := zap.NewProductionConfig()
 	loggerCfg.EncoderConfig.EncodeTime = zapcore.RFC3339NanoTimeEncoder
 	logger, err := loggerCfg.Build()
+	webFileFolder := ""
 
+	if folder, ok := os.LookupEnv("AEON_ROOT"); ok {
+		webFileFolder = folder
+	}
 	if err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
 	}
@@ -29,8 +34,14 @@ func main() {
 		_ = logger.Sync()
 	}(logger)
 
+	config, data, dataFolder, err := appcore.LoadApp()
+	if err != nil {
+		logger.Sugar().Errorf("error loading app: %w", err)
+		return
+	}
+
 	// Setup router
-	r := router.SetupRouter(logger)
+	r := router.SetupRouter(logger, config, data, dataFolder, webFileFolder)
 
 	// Create HTTP server
 	srv := &http.Server{

@@ -1,6 +1,6 @@
 package handlers
 
-// TimeRequest defines the structure for time-related requests.
-type TimeRequest struct {
-	Time *string `json:"time"`
+// StartTrackingRequest defines the structure for time-related requests.
+type StartTrackingRequest struct {
+	Comment string `json:"time,omitempty"`
 }

@@ -1,12 +1,13 @@
 package tracking
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/jame-developer/aeontrac/configuration"
 	"github.com/jame-developer/aeontrac/pkg/errors"
 	"github.com/jame-developer/aeontrac/pkg/models"
 	"github.com/jame-developer/aeontrac/pkg/repositories"
-	"time"
 )
 
 // StartTracking starts tracking a new unit of work. If a unit of work is already running, an error is returned.
@@ -34,7 +35,7 @@ func StartTracking(startDateTime *time.Time, comment string, a *models.AeonVault
 			a.Days[dayKey] = day
 		}
 	} else {
-		a.Days[dayKey] = repositories.NewAoenDay(*startDateTime)
+		a.Days[dayKey] = repositories.NewAoenDay(newTrackingStart)
 	}
 	for _, unit := range a.Days[dayKey].Units {
 		if unit.Stop != nil && newTrackingStart.After(*unit.Start) && newTrackingStart.Before(*unit.Stop) {

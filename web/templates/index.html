@@ -4,95 +4,263 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AeonTrac</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+            font-family: 'Roboto Mono', monospace;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f8f9fa;
+            margin: 0;
         }
+
         .container {
             text-align: center;
+            background-color: #2a2a2a;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
         }
-        .btn {
-            margin: 10px;
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 120px;
+            height: 60px;
+            margin-bottom: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #3a3a3a;
+            transition: .4s;
+            border-radius: 30px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 50px;
+            width: 50px;
+            left: 5px;
+            bottom: 5px;
+            background-color: #1a1a1a;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #00ffff;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(60px);
+        }
+
+        .report-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+        }
+
+        .report-card {
+            background-color: #3a3a3a;
+            padding: 20px;
+            border-radius: 10px;
+            width: 45%;
+            margin: 0.3em;
+        }
+
+        h2 {
+            color: #00ffff;
+        }
+
+        canvas {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="mb-4">AeonTrac</h1>
-        <button id="startButton" class="btn btn-primary btn-lg">Start Tracking</button>
-        <button id="stopButton" class="btn btn-danger btn-lg">Stop Tracking</button>
+<div class="container">
+    <h1>AeonTrac</h1>
+    <label class="toggle-switch">
+        <input type="checkbox" id="trackingToggle">
+        <span class="slider"></span>
+    </label>
+
+    <div class="report-container">
+        <div class="report-card">
+            <h2>Today</h2>
+            <p id="todayHours">00:00:00</p>
+            <canvas id="todayChart"></canvas>
+        </div>
+        <div class="report-card">
+            <h2>This Week</h2>
+            <p id="weekHours">00:00:00</p>
+            <canvas id="weekChart"></canvas>
+        </div>
     </div>
+</div>
 
-    <script>
-        const startButton = document.getElementById('startButton');
-        const stopButton = document.getElementById('stopButton');
+<script>
+    const trackingToggle = document.getElementById('trackingToggle');
+    const todayHours = document.getElementById('todayHours');
+    const weekHours = document.getElementById('weekHours');
+    const todayChartCtx = document.getElementById('todayChart').getContext('2d');
+    const weekChartCtx = document.getElementById('weekChart').getContext('2d');
 
-        function updateButtonStates() {
-            fetch('/status')
-                .then(response => response.json())
-                .then(data => {
-                    startButton.disabled = data.is_tracking;
-                    stopButton.disabled = !data.is_tracking;
-                })
-                .catch(error => {
-                    console.error('Error fetching status:', error);
-                    // Handle error, maybe disable both buttons
-                    startButton.disabled = true;
-                    stopButton.disabled = true;
-                });
-        }
+    let todayChart, weekChart;
 
-        startButton.addEventListener('click', () => {
-            fetch('/start', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
+    function updateUI(status, todayData, weekData) {
+        trackingToggle.checked = status.is_tracking;
+
+        todayHours.textContent = todayData.total_hours || '00:00:00';
+        weekHours.textContent = weekData.total_hours || '00:00:00';
+
+        const todayTracked = durationToHours(todayData.total_hours);
+        const todayGoal = 8; // Assuming 8 hours goal
+        const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const weekTracked = weekData.days.map(day => durationToHours(day.total_hours));
+
+        if (todayChart) todayChart.destroy();
+        todayChart = new Chart(todayChartCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Goal', 'Overtime'],
+                datasets: [
+                    {
+                        data: [todayGoal,todayTracked],
+                        backgroundColor: ['#00ffff'],
+                        borderWidth: 0
+                    },
+                    {
+                        data: [todayTracked - todayGoal],
+                        backgroundColor: ['#ff20f7'],
+                        borderWidth: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                cutout: '80%',
+                plugins: {
+                    legend: {display: true},
+                    tooltip: {enabled: true}
+                }
+            }
+        });
+
+        if (weekChart) weekChart.destroy();
+        weekChart = new Chart(weekChartCtx, {
+            type: 'bar',
+            data: {
+                labels: weekDays,
+                datasets: [{
+                    data: weekTracked,
+                    backgroundColor: '#00ffff',
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#f0f0f0'
+                        },
+                        grid: {
+                            color: '#4a4a4a'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#f0f0f0'
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
                 },
-                body: JSON.stringify({ type: 'WORK' })
+                plugins: {
+                    legend: {display: false}
+                }
+            }
+        });
+    }
+
+    function durationToHours(durationStr) {
+        if (!durationStr) return 0;
+        const parts = durationStr.split(':').map(Number);
+        return parts[0] + parts[1] / 60 + parts[2] / 3600;
+    }
+
+    function getWeekRange() {
+        const today = new Date();
+        const day = today.getDay();
+        const diff = today.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+        const monday = new Date(today.setDate(diff));
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        return {
+            from: monday.toISOString().split('T')[0],
+            to: sunday.toISOString().split('T')[0]
+        };
+    }
+
+    function fetchData() {
+        const today = new Date().toISOString().split('T')[0];
+        const weekRange = getWeekRange();
+
+        Promise.all([
+            fetch('/api/tracking/status').then(res => res.json()),
+            fetch(`/api/report/today`).then(res => res.json()),
+            fetch(`/api/report?from=${weekRange.from}&to=${weekRange.to}`).then(res => res.json())
+        ])
+            .then(([status, todayData, weekData]) => {
+                updateUI(status, todayData, weekData);
             })
+            .catch(error => console.error('Error fetching data:', error));
+    }
+
+    trackingToggle.addEventListener('change', () => {
+        const action = trackingToggle.checked ? 'start' : 'stop';
+        fetch(`/api/tracking/${action}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(action === 'start' ? {comment: 'WORK'} : {})
+        })
             .then(response => {
                 if (response.ok) {
-                    alert('Tracking started!');
-                    updateButtonStates();
+                    fetchData();
                 } else {
-                    alert('Error starting tracking.');
+                    alert(`Error ${action}ing tracking.`);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Error starting tracking.');
+                alert(`Error ${action}ing tracking.`);
             });
-        });
+    });
 
-        stopButton.addEventListener('click', () => {
-            fetch('/stop', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({})
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert('Tracking stopped!');
-                    updateButtonStates();
-                } else {
-                    alert('Error stopping tracking.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error stopping tracking.');
-            });
-        });
-
-        // Initial button state update
-        updateButtonStates();
-    </script>
+    fetchData();
+</script>
 </body>
 </html>

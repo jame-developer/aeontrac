@@ -2,27 +2,30 @@ package router
 
 import (
 	"net/http"
+	"path"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jame-developer/aeontrac/configuration"
+	"github.com/jame-developer/aeontrac/pkg/models"
 	"go.uber.org/zap"
 
 	"github.com/jame-developer/aeontrac/internal/api/handlers"
 	"github.com/jame-developer/aeontrac/internal/api/middleware"
 )
 
-func SetupRouter(logger *zap.Logger) *gin.Engine {
+func SetupRouter(logger *zap.Logger, config *configuration.Config, data *models.AeonVault, dataFolder string, webTemplateFolder string) *gin.Engine {
 	r := gin.New()
 
 	r.Use(middleware.LoggerMiddleware(logger))
 	r.Use(middleware.RecoveryMiddleware())
 
-	r.GET("/report", handlers.ReportHandler)
-	r.POST("/start", handlers.StartHandler)
-	r.POST("/stop", handlers.StopHandler)
-	r.POST("/worktime", handlers.AddWorkTimeHandler)
-	r.GET("/status", handlers.StatusHandler)
+	apiGrp := r.Group("/api")
+	handlers.AttachReportingHandlers(apiGrp, logger, config, data, dataFolder)
+	handlers.AttachTrackingHandlers(apiGrp, logger, config, data, dataFolder)
 
-	r.LoadHTMLGlob("web/templates/*")
+	r.POST("/worktime", handlers.AddWorkTimeHandler)
+
+	r.LoadHTMLGlob(path.Join(webTemplateFolder, "web/templates/*"))
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", nil)
 	})

@@ -2,12 +2,13 @@ package reporting
 
 import (
 	"fmt"
-	"github.com/jame-developer/aeontrac/configuration"
-	"github.com/jame-developer/aeontrac/pkg/models"
 	"log"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/jame-developer/aeontrac/configuration"
+	"github.com/jame-developer/aeontrac/pkg/models"
 )
 
 const unitLineTmpl = "%s %s\t%s\t%s"
@@ -111,10 +112,38 @@ type TodayReportUnit struct {
 }
 
 type TodayReport struct {
-	Units       []TodayReportUnit `json:"units"`
-	TotalHours  string            `json:"total_hours"`
-	Overtime    string            `json:"overtime"`
-	Holidays    []string          `json:"holidays,omitempty"`
+	Units      []TodayReportUnit `json:"units"`
+	TotalHours string            `json:"total_hours"`
+	Overtime   string            `json:"overtime"`
+	Holidays   []string          `json:"holidays,omitempty"`
+}
+
+func GetReport(from, to time.Time, workingHoursConfig configuration.WorkingHoursConfig, a *models.AeonVault) models.ReportResponse {
+	var days []models.DayReport
+	var totalHours time.Duration
+	var overtimeHours time.Duration
+	today := time.Now()
+	for d := from; !d.After(to); d = d.AddDate(0, 0, 1) {
+		dayKey := d.Format(time.DateOnly)
+		if today.Before(d) {
+			continue
+		}
+		if day, ok := a.Days[dayKey]; ok {
+			days = append(days, models.DayReport{
+				Date:          dayKey,
+				TotalHours:    formatDuration(day.TotalHours.Duration),
+				OvertimeHours: formatDuration(day.OvertimeHours.Duration),
+			})
+			totalHours += day.TotalHours.Duration
+			overtimeHours += day.OvertimeHours.Duration
+		}
+	}
+
+	return models.ReportResponse{
+		TotalHours:    formatDuration(totalHours),
+		OvertimeHours: formatDuration(overtimeHours),
+		Days:          days,
+	}
 }
 
 func GetTodayReport(workingHoursConfig configuration.WorkingHoursConfig, a *models.AeonVault) TodayReport {
